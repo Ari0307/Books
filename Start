@@ -1,0 +1,14 @@
+@IBOutlet weak var infolabel: UILabel!
+    @IBOutlet weak var firstbutton: UIButton!
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        infolabel.text = "My Project"
+        
+    }
+
+ 
+    @IBAction func MyAction(_ sender: Any) {
+        infolabel.text = "Students"
+    }
+    
