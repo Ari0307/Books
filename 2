@@ -1,0 +1,54 @@
+
+    @IBOutlet weak var infolabel: UILabel!
+    @IBOutlet weak var firstbutton: UIButton!
+    var a: UIColor!
+    
+    var spisok : [Human] = [Human(age: 19, name: "Мария"), Human(age: 12, name: "Саша")]
+    var spisokofteachers : [Human] = [Human(age: 44, name: "Алексей Иванович"), Human(age: 43, name: "Мария Фёдоровна")]
+
+    
+    @IBAction func buttonPressed(_ sender: UIButton) {
+        sender.backgroundColor = UIColor.black
+        firstbutton.backgroundColor = UIColor.brown
+         performSegue(withIdentifier: "toTableView", sender: Any?.self)
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        infolabel.text = "My Project"
+        a = firstbutton.backgroundColor
+    }
+
+ 
+    @IBAction func MyAction(_ sender: Any) {
+        infolabel.text = "Students"
+        firstbutton.setTitle("Нажалась", for:UIControlState())
+        if firstbutton.backgroundColor == a{
+            firstbutton.backgroundColor = UIColor.black
+        } else {
+            firstbutton.backgroundColor = a
+        }
+        firstbutton.layer.cornerRadius = 3//
+        
+        
+    }
+    
+    @IBAction func buttonPressed2(_ sender: Any) {
+        (sender as! UIButton).backgroundColor = UIColor.black
+    }
+    
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        let  destinationVC = segue.destination as! TableViewController
+        if ( firstbutton.isEqual(sender))
+        {
+        destinationVC.spisokk = spisok
+        }
+        else
+        {
+            destinationVC.spisokk=spisok
+    }
+   
+}
+}
+
