@@ -1,37 +1,151 @@
+//
+//  ReadingViewController.swift
+//  MyApplication
+//
+//  Created by Арина Зубкова on 29.04.17.
+//  Copyright © 2017 Арина Зубкова. All rights reserved.
+//
+//
 import UIKit
+import CoreData
 
-class ReadingViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class ReadingViewController: UIViewController, UITableViewDelegate {
     
     @IBOutlet weak var booksTableView: UITableView!
     @IBOutlet weak var addButton: UIButton!
     
-    private var books = [Book]()
-
+    var people: [NSManagedObject] = []
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        title = "Читаю"
+        booksTableView.register(UITableViewCell.self,
+                                forCellReuseIdentifier: "BookCell")
     }
     
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return books.count
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+            return
+        }
+        
+        let managedContext = appDelegate.persistentContainer.viewContext
+        
+        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Book2")
+        do {
+            people = try managedContext.fetch(fetchRequest)
+        } catch let error as NSError {
+            print("Could not fetch. \(error), \(error.userInfo)")
+        }
     }
     
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "BookCell", for: indexPath) as! ReadingTableViewCell
-        cell.bookNameLabel.text = books[indexPath.item].author + " " + books[indexPath.item].title
-        cell.infoButton.addTarget(self, action: #selector(showNotesViewController(_:)), for: .touchUpInside)
-        return cell
+    @IBAction func addRow(_ sender: UIBarButtonItem) {
+        
+        let alert = UIAlertController(title: "New Book",
+                                      message: "Добавить новую книгу",
+                                      preferredStyle: .alert)
+        
+        let saveAction = UIAlertAction(title: "Сохранить", style: .default) { [unowned self] action in
+            
+            guard let textField = alert.textFields?.first,
+                let nameToSave = textField.text else {
+                    return
+            }
+            
+            self.save(name: nameToSave)
+            self.booksTableView.reloadData()
+        }
+        
+        let cancelAction = UIAlertAction(title: "Отмена",
+                                         style: .default)
+        
+        alert.addTextField()
+        
+        alert.addAction(saveAction)
+        alert.addAction(cancelAction)
+        
+        present(alert, animated: true)
     }
-
-    @IBAction func addRow(_ sender: Any) {
-        books.append(Book(author: "Пушкин", title: "Капитанская дочка"))
-        booksTableView.beginUpdates()
-        booksTableView.insertRows(at: [IndexPath(row: books.count - 1, section: 0)], with: .automatic)
-        booksTableView.endUpdates()
+    
+    func save(name: String) {
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+            return
+        }
+        
+        let managedContext = appDelegate.persistentContainer.viewContext
+        
+        let entity = NSEntityDescription.entity(forEntityName: "Book2",
+                                                in: managedContext)!
+        
+        let person = NSManagedObject(entity: entity,
+                                     insertInto: managedContext)
+        
+        person.setValue(name, forKeyPath: "name")
+        
+        do {
+            try managedContext.save()
+            people.append(person)
+        } catch let error as NSError {
+            print("Could not save. \(error), \(error.userInfo)")
+        }
     }
     func showNotesViewController(_ sender: UIButton){
         self.performSegue(withIdentifier: "ShowNotesViewController", sender: self)
     }
+    
 
+}
 
-
+// MARK: - UITableViewDataSource
+extension ReadingViewController: UITableViewDataSource {
+    
+    func tableView(_ booksTableView: UITableView,
+                   numberOfRowsInSection section: Int) -> Int {
+        return people.count
+    }
+    
+    func tableView(_ booksTableView: UITableView,
+                   cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
+        let person = people[indexPath.row]
+        let cell = booksTableView.dequeueReusableCell(withIdentifier: "BookCell",
+                                                      for: indexPath)
+        cell.textLabel?.text = person.value(forKeyPath: "name") as? String
+        return cell
+    }
+    func tableView(_ booksTableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+        return true
+    }
+    
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+        if (editingStyle == UITableViewCellEditingStyle.delete) {
+            guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+                return
+            }
+            
+            let managedContext = appDelegate.persistentContainer.viewContext
+            // Initialize Fetch Request
+            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Book2")
+            
+            // Configure Fetch Request
+            fetchRequest.includesPropertyValues = false
+            
+            do {
+                let items = try managedContext.fetch(fetchRequest) as! [NSManagedObject]
+                
+                managedContext.delete(items[indexPath.row])
+                people.remove(at: indexPath.row)
+                tableView.deleteRows(at: [indexPath], with: .fade)
+                
+                try managedContext.save()
+            }
+            catch
+            {
+                print("error")
+            }
+        }
+        
+    }
 }

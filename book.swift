@@ -1,7 +1,16 @@
+
+//
+//  book.swift
+//  MyApplication
+//
+//  Created by Арина Зубкова on 29.04.17.
+//  Copyright © 2017 Арина Зубкова. All rights reserved.
+//
+
 import Foundation
 import UIKit
 
-class Book{
+class Book {
     var author : String!
     var title : String!
     var notes : String!
